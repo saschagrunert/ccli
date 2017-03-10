@@ -7,61 +7,95 @@ import (
 	"time"
 )
 
-// AppSettings specifies the application options
-type AppSettings struct {
-	Name        string
-	Usage       string
-	Version     string
-	Description string
-	Company     string
-	Authors     []cli.Author
-}
-
 // NewApp creates a new applications with the given settings
-func NewApp(settings AppSettings) *cli.App {
-	cli.AppHelpTemplate = getHelpTemplate()
-
+func NewApp() *cli.App {
 	app := cli.NewApp()
-	app.Authors = settings.Authors
 	app.Compiled = time.Now()
-	app.Copyright = fmt.Sprintf("© %d %s", time.Now().Year(), settings.Company)
-	app.Description = settings.Description
-	app.Name = settings.Name
-	app.Usage = settings.Usage
-	app.Version = settings.Version
-
+	setAppTemplates()
 	return app
 }
 
-func getHelpTemplate() string {
+func setAppTemplates() {
 	// Set the colors
 	yellow := color.New(color.FgYellow).SprintFunc()
 	green := color.New(color.FgGreen).SprintFunc()
 	blue := color.New(color.FgBlue).SprintFunc()
 
-	// Generate the template string
-	a := green("{{.Name}}") + " {{.Version}}\n"
-	a += "{{if .Usage}}{{.Usage}}{{end}}\n\n"
-	a += yellow("USAGE:\n")
-	a += "    {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} "
-	a += "{{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}\n\n"
-	a += "{{end}}{{end}}{{if .Description}}"
-	a += yellow("DESCRIPTION:\n")
-	a += "    {{.Description}}\n\n{{end}}{{if len .Authors}}"
-	a += yellow("AUTHOR{{with $length := len .Authors}}{{if ne 1 $length}}S{{end}}{{end}}:\n")
-	a += "    {{range $index, $author := .Authors}}{{if $index}}\n"
-	a += "    {{end}}{{$author}}{{end}}{{end}}{{if .VisibleCommands}}\n\n"
-	a += yellow("COMMANDS:") + "{{range .VisibleCategories}}{{if .Name}}\n"
-	a += green("    {{.Name}}")
-	a += ":{{end}}{{range .VisibleCommands}}\n"
-	a += green(`    {{join .Names ", "}}{{"\t"}}`)
-	a += "{{.Usage}}{{end}}{{end}}{{end}}{{if .VisibleFlags}}\n\n"
-	a += yellow("GLOBAL OPTIONS:")
-	a += `
-   {{range $index, $option := .VisibleFlags}}{{if $index}}
-   {{end}}{{$option}}{{end}}{{end}}{{if .Copyright}}
+	// Set the application help template
+	cli.AppHelpTemplate = fmt.Sprintf(`%s {{.Version}}
+{{if .Usage}}{{.Usage}}{{end}}
 
-`
-	a += blue("{{.Copyright}}{{end}}\n")
-	return a
+%s
+    {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}
+
+%s
+    {{.Version}}{{end}}{{end}}{{if .Description}}
+
+%s
+    {{.Description}}{{end}}{{if len .Authors}}
+
+%s{{with $length := len .Authors}}{{if ne 1 $length}}S{{end}}{{end}}%s
+    {{range $index, $author := .Authors}}{{if $index}}
+    {{end}}{{$author}}{{end}}{{end}}{{if .VisibleCommands}}
+
+%s{{range .VisibleCategories}}{{if .Name}}
+    {{.Name}}:{{end}}{{range .VisibleCommands}}
+    %s{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+
+%s
+    {{range $index, $option := .VisibleFlags}}{{if $index}}
+    {{end}}{{$option}}{{end}}{{end}}{{if .Copyright}}
+
+%s{{end}}
+`, green("{{.Name}}"),
+		yellow("USAGE:"),
+		yellow("VERSION:"),
+		yellow("DESCRIPTION:"),
+		yellow("AUTHOR"),
+		yellow(":"),
+		yellow("COMMANDS:"),
+		green(`{{join .Names ", "}}`),
+		yellow("GLOBAL OPTIONS:"),
+		blue("{{.Copyright}}"))
+
+	// Set the command help template
+	cli.CommandHelpTemplate = fmt.Sprintf(`%s
+    {{.HelpName}} - {{.Usage}}
+
+%s
+    {{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{if .Category}}
+
+%s
+    {{.Category}}{{end}}{{if .Description}}
+
+%s
+    {{.Description}}{{end}}{{if .VisibleFlags}}
+
+%s
+    {{range .VisibleFlags}}{{.}}
+    {{end}}{{end}}
+`, yellow("NAME:"),
+		yellow("USAGE:"),
+		yellow("CATEGORY:"),
+		yellow("DESCRIPTION:"),
+		yellow("OPTIONS:"))
+
+	// Set the subcommand help template
+	cli.SubcommandHelpTemplate = fmt.Sprintf(`%s
+    {{.HelpName}} - {{if .Description}}{{.Description}}{{else}}{{.Usage}}{{end}}
+
+%s
+    {{.HelpName}} command{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+
+%s{{range .VisibleCategories}}{{if .Name}}
+    {{.Name}}:{{end}}{{range .VisibleCommands}}
+    {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}
+{{end}}{{if .VisibleFlags}}
+%s
+    {{range .VisibleFlags}}{{.}}
+    {{end}}{{end}}
+`, yellow("NAME:"),
+		yellow("USAGE:"),
+		yellow("COMMANDS:"),
+		yellow("OPTIONS:"))
 }
