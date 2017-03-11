@@ -22,19 +22,16 @@ func setAppTemplates() {
 	blue := color.New(color.FgBlue).SprintFunc()
 
 	// Set the application help template
-	cli.AppHelpTemplate = fmt.Sprintf(`%s {{.Version}}
+	cli.AppHelpTemplate = fmt.Sprintf(`%s {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
 {{if .Usage}}{{.Usage}}{{end}}
 
 %s
-    {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Version}}{{if not .HideVersion}}
-
-%s
-    {{.Version}}{{end}}{{end}}{{if .Description}}
+    {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Description}}
 
 %s
     {{.Description}}{{end}}{{if len .Authors}}
 
-%s{{with $length := len .Authors}}{{if ne 1 $length}}S{{end}}{{end}}%s
+%s{{with $length := len .Authors}}{{if ne 1 $length}}%s{{end}}{{end}}%s
     {{range $index, $author := .Authors}}{{if $index}}
     {{end}}{{$author}}{{end}}{{end}}{{if .VisibleCommands}}
 
@@ -49,9 +46,9 @@ func setAppTemplates() {
 %s{{end}}
 `, green("{{.Name}}"),
 		yellow("USAGE:"),
-		yellow("VERSION:"),
 		yellow("DESCRIPTION:"),
 		yellow("AUTHOR"),
+		yellow("S"),
 		yellow(":"),
 		yellow("COMMANDS:"),
 		green(`{{join .Names ", "}}`),
