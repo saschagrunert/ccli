@@ -5,6 +5,8 @@
 This project uses the already existing go package [cli](https://github.com/urfave/cli) and adds additional coloring
 support to it. Some strong defaults are provided as well.
 
+![screenshot](.github/screenshot.png)
+
 ## Usage
 Install the package with:
 
@@ -47,7 +49,3 @@ func main() {
 	app.Run(os.Args)
 }
 ```
-
-If you run this application, the help output will look like this:
-
-![screenshot](.github/screenshot.png)
