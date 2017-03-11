@@ -17,23 +17,25 @@ func NewApp() *cli.App {
 
 func setAppTemplates() {
 	// Set the colors
-	yellow := color.New(color.FgYellow).SprintFunc()
-	green := color.New(color.FgGreen).SprintFunc()
 	blue := color.New(color.FgBlue).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
+	green := color.New(color.FgGreen).SprintFunc()
+	red := color.New(color.FgRed).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
 
 	// Set the application help template
 	cli.AppHelpTemplate = fmt.Sprintf(`%s {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
 {{if .Usage}}{{.Usage}}{{end}}
 
 %s
-    {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Description}}
+    %s {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Description}}
 
 %s
     {{.Description}}{{end}}{{if len .Authors}}
 
 %s{{with $length := len .Authors}}{{if ne 1 $length}}%s{{end}}{{end}}%s
     {{range $index, $author := .Authors}}{{if $index}}
-    {{end}}{{$author}}{{end}}{{end}}{{if .VisibleCommands}}
+    {{end}}%s{{end}}{{end}}{{if .VisibleCommands}}
 
 %s{{range .VisibleCategories}}{{if .Name}}
     {{.Name}}:{{end}}{{range .VisibleCommands}}
@@ -46,14 +48,16 @@ func setAppTemplates() {
 %s{{end}}
 `, green("{{.Name}}"),
 		yellow("USAGE:"),
+		cyan("{{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}"),
 		yellow("DESCRIPTION:"),
 		yellow("AUTHOR"),
 		yellow("S"),
 		yellow(":"),
+		blue("{{$author}}"),
 		yellow("COMMANDS:"),
 		green(`{{join .Names ", "}}`),
 		yellow("GLOBAL OPTIONS:"),
-		blue("{{.Copyright}}"))
+		red("{{.Copyright}}"))
 
 	// Set the command help template
 	cli.CommandHelpTemplate = fmt.Sprintf(`%s
