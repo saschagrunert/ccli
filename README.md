@@ -1,4 +1,4 @@
-# ccli
+# ccli 🌈
 ## Command line parsing in go, with coloring support
 
 This project uses the already existing go package [cli](https://github.com/urfave/cli) and adds additional coloring
