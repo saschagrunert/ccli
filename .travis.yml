@@ -11,3 +11,4 @@ matrix:
 script:
   - go get -t -v ./...
   - go run _example/main.go
+  - go run _example/main.go -h
