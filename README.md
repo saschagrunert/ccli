@@ -1,5 +1,5 @@
 # ccli 🌈
-[![godoc ccli](https://img.shields.io/badge/godoc-ccli-blue.svg)](https://godoc.org/gopkg.in/saschagrunert/ccli.v1) [![godoc ccli](https://img.shields.io/badge/gopkg-ccli-green.svg)](http://gopkg.in/saschagrunert/ccli.v1)
+[![Build Status](https://travis-ci.org/saschagrunert/ccli.svg)](https://travis-ci.org/saschagrunert/ccli) [![godoc ccli](https://img.shields.io/badge/godoc-ccli-blue.svg)](https://godoc.org/gopkg.in/saschagrunert/ccli.v1) [![godoc ccli](https://img.shields.io/badge/gopkg-ccli-green.svg)](http://gopkg.in/saschagrunert/ccli.v1)
 ## Command line parsing in go, with coloring support
 
 This project uses the already existing go package [cli](https://github.com/urfave/cli) and adds additional coloring
