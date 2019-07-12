@@ -1,17 +1,14 @@
+---
 sudo: false
 language: go
 go:
-  - 1.7.x
-  - 1.8.x
-  - master
+  - 1.12.x
 os:
   - linux
-  - osx
 matrix:
-  allow_failures:
-    - go: master
   fast_finish: true
 script:
-  - go get -t -v ./...
-  - go run _example/main.go
-  - go run _example/main.go -h
+  - make vendor && ./hack/tree_status.sh
+  - make lint
+  - go run example/main.go
+  - go run example/main.go -h
