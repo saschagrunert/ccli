@@ -14,7 +14,7 @@ support to it. Some strong defaults are provided as well.
 Install the package with:
 
 ```shell
-go get github.com/saschagrunert/ccli/pkg
+go get github.com/saschagrunert/ccli
 ```
 
 Afterwards it can be used like the `cli` package:
@@ -27,7 +27,7 @@ import (
 	"os"
 	"time"
 
-	ccli "github.com/saschagrunert/ccli/pkg"
+	"github.com/saschagrunert/ccli"
 	"github.com/urfave/cli"
 )
 
