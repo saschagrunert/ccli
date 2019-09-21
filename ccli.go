@@ -2,7 +2,6 @@ package ccli
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
@@ -11,7 +10,6 @@ import (
 // NewApp creates a new applications with the given settings
 func NewApp() *cli.App {
 	app := cli.NewApp()
-	app.Compiled = time.Now()
 	app.Writer = color.Output
 	setAppTemplates()
 	return app
