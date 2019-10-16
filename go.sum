@@ -16,6 +16,7 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/bombsimon/wsl v1.2.1 h1:DcLf3V66dJi4a+KHt+F1FdOeBZ05adHqTMYFvjgv06k=
 github.com/bombsimon/wsl v1.2.1/go.mod h1:43lEF/i0kpXbLCeDXL9LMT8c92HyBywXb0AsgMHYngM=
+github.com/bombsimon/wsl v1.2.5/go.mod h1:43lEF/i0kpXbLCeDXL9LMT8c92HyBywXb0AsgMHYngM=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
@@ -76,6 +77,7 @@ github.com/go-toolsmith/typep v1.0.0 h1:zKymWyA1TRYvqYrYDrfEMZULyrhcnGY3x7LDKU2X
 github.com/go-toolsmith/typep v1.0.0/go.mod h1:JSQCQMUPdRlMZFswiq3TGpNp1GMktqkR2Ns5AIQkATU=
 github.com/gobwas/glob v0.2.3 h1:A4xDbljILXROh+kObIiy5kIaPYD8e96x1tgBhUI5J+Y=
 github.com/gobwas/glob v0.2.3/go.mod h1:d3Ez4x06l9bZtSvzIay5+Yzi0fmZzPgnTbPcKjJAkT8=
+github.com/gofrs/flock v0.0.0-20190320160742-5135e617513b/go.mod h1:F1TvTiK9OcQqauNUHlbJvyl9Qa1QvF/gOUDKA14jxHU=
 github.com/gogo/protobuf v1.1.1 h1:72R+M5VuhED/KujmZVcIquuo8mBgX4oVda//DQb3PXo=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.2.1 h1:/s5zKNz0uPFCZ5hddgPdo2TK2TVrUNMn0OOX8/aZMTE=
@@ -118,6 +120,8 @@ github.com/golangci/golangci-lint v1.18.0 h1:XmQgfcLofSG/6AsQuQqmLizB+3GggD+o6Ob
 github.com/golangci/golangci-lint v1.18.0/go.mod h1:kaqo8l0OZKYPtjNmG4z4HrWLgcYNIJ9B9q3LWri9uLg=
 github.com/golangci/golangci-lint v1.20.0 h1:BRmroXvnikbTCJJ+wbBgbt2kfbDC5RGONSK8xL9D6eo=
 github.com/golangci/golangci-lint v1.20.0/go.mod h1:WhcG5dpuf94TEpqUBk95qBEZ599UcAvuGf02g47CdXU=
+github.com/golangci/golangci-lint v1.21.0 h1:HxAxpR8Z0M8omihvQdsD3PF0qPjlqYqp2vMJzstoKeI=
+github.com/golangci/golangci-lint v1.21.0/go.mod h1:phxpHK52q7SE+5KpPnti4oZTdFCEsn/tKN+nFvCKXfk=
 github.com/golangci/gosec v0.0.0-20180901114220-66fb7fc33547 h1:qMomh8bv+kDazm1dSLZ9S3zZ2PJZMHL4ilfBjxFOlmI=
 github.com/golangci/gosec v0.0.0-20180901114220-66fb7fc33547/go.mod h1:0qUabqiIQgfmlAmulqxyiGkkyF6/tOGSnY2cnPVwrzU=
 github.com/golangci/gosec v0.0.0-20190211064107-66fb7fc33547 h1:fUdgm/BdKvwOHxg5AhNbkNRp2mSy8sxTXyBVs/laQHo=
@@ -132,6 +136,7 @@ github.com/golangci/lint-1 v0.0.0-20190420132249-ee948d087217 h1:En/tZdwhAn0JNwL
 github.com/golangci/lint-1 v0.0.0-20190420132249-ee948d087217/go.mod h1:66R6K6P6VWk9I95jvqGxkqJxVWGFy9XlDwLwVz1RCFg=
 github.com/golangci/lint-1 v0.0.0-20190930103755-fad67e08aa89 h1:664ewjIQUXDvinFMbAsoH2V2Yvaro/X8BoYpIMTWGXI=
 github.com/golangci/lint-1 v0.0.0-20190930103755-fad67e08aa89/go.mod h1:66R6K6P6VWk9I95jvqGxkqJxVWGFy9XlDwLwVz1RCFg=
+github.com/golangci/lint-1 v0.0.0-20191013205115-297bf364a8e0/go.mod h1:66R6K6P6VWk9I95jvqGxkqJxVWGFy9XlDwLwVz1RCFg=
 github.com/golangci/maligned v0.0.0-20180506175553-b1d89398deca h1:kNY3/svz5T29MYHubXix4aDDuE3RWHkPvopM/EDv/MA=
 github.com/golangci/maligned v0.0.0-20180506175553-b1d89398deca/go.mod h1:tvlJhZqDe4LMs4ZHD0oMUlt9G2LWuDGoisJTBzLMV9o=
 github.com/golangci/misspell v0.0.0-20180809174111-950f5d19e770 h1:EL/O5HGrF7Jaq0yNhBLucz9hTuRzj2LdwGBOaENgxIk=
@@ -412,6 +417,7 @@ golang.org/x/tools v0.0.0-20190909030654-5b82db07426d/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20190910044552-dd2b5c81c578/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20190930201159-7c411dea38b0 h1:7+F62GGWUowoiJOUDivedlBECd/fTeUDJnCu0JetQO0=
 golang.org/x/tools v0.0.0-20190930201159-7c411dea38b0/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20191010075000-0337d82405ff/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
