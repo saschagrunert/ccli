@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/saschagrunert/ccli"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
@@ -16,9 +16,9 @@ func main() {
 	app.Version = "0.1.0"
 	app.Description = "Application description"
 	app.Copyright = fmt.Sprintf("© %d Some Company", time.Now().Year())
-	app.Authors = []cli.Author{{Name: "Name", Email: "e@mail.com"}}
+	app.Authors = []*cli.Author{{Name: "Name", Email: "e@mail.com"}}
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "lang",
 			Value: "english",
 			Usage: "language for the greeting",

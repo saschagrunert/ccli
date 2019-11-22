@@ -5,5 +5,5 @@ go 1.12
 require (
 	github.com/fatih/color v1.7.0
 	github.com/golangci/golangci-lint v1.20.0
-	github.com/urfave/cli v1.22.1
+	github.com/urfave/cli/v2 v2.0.0
 )
