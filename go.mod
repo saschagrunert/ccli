@@ -4,6 +4,6 @@ go 1.13
 
 require (
 	github.com/fatih/color v1.9.0
-	github.com/golangci/golangci-lint v1.23.7
+	github.com/golangci/golangci-lint v1.23.8
 	github.com/urfave/cli/v2 v2.1.1
 )
