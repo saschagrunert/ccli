@@ -1,4 +1,4 @@
-module github.com/saschagrunert/ccli
+module github.com/saschagrunert/ccli/v2
 
 go 1.13
 

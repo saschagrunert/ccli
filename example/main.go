@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/saschagrunert/ccli"
+	"github.com/saschagrunert/ccli/v2"
 	"github.com/urfave/cli/v2"
 )
 
