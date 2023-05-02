@@ -4,5 +4,5 @@ go 1.13
 
 require (
 	github.com/fatih/color v1.15.0
-	github.com/urfave/cli/v2 v2.25.1
+	github.com/urfave/cli/v2 v2.25.2
 )
