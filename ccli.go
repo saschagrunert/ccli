@@ -7,11 +7,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// NewApp creates a new applications with the given settings
+// NewApp creates a new applications with the given settings.
 func NewApp() *cli.App {
 	app := cli.NewApp()
 	app.Writer = color.Output
 	setAppTemplates()
+
 	return app
 }
 
