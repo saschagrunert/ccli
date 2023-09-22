@@ -26,6 +26,7 @@ func main() {
 	}
 	app.Action = func(c *cli.Context) error {
 		fmt.Println("boom! I say!")
+
 		return nil
 	}
 	if err := app.Run(os.Args); err != nil {
