@@ -90,14 +90,6 @@ Any color left unset falls back to its default. To turn off all coloring:
 cmd := ccli.NewCommandWith(ccli.WithDisable())
 ```
 
-## Migrating from v2
-
-The `v2` branch is deprecated. To upgrade, change your imports from
-`github.com/saschagrunert/ccli/v2` to `github.com/saschagrunert/ccli/v3` and
-follow the [urfave/cli v3 migration guide](https://github.com/urfave/cli/blob/main/docs/migrate-v2-to-v3.md).
-The main change is that `cli.App` has been replaced by `cli.Command`, so
-`NewApp` is now `NewCommand`.
-
 ## Subcommand colors
 
 Subcommands added after creating the root command don't automatically get
@@ -114,6 +106,17 @@ cmd.Commands = []*cli.Command{
 }
 ccli.Apply(cmd) // recursively sets colored templates on all subcommands
 ```
+
+## Migrating from v2
+
+The `v2` branch is deprecated. To upgrade:
+
+1. Change imports from `github.com/saschagrunert/ccli/v2` to
+   `github.com/saschagrunert/ccli/v3`
+2. Rename `NewApp` to `NewCommand`, `NewAppWith` to `NewCommandWith`, and
+   `NewAppWithOptions` to `NewCommandWithOptions`
+3. Follow the [urfave/cli v3 migration guide](https://github.com/urfave/cli/blob/main/docs/migrate-v2-to-v3.md)
+   for other `cli.App` to `cli.Command` changes
 
 ## Notes
 
