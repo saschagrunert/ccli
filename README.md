@@ -49,6 +49,23 @@ func main() {
 			Usage: "language for the greeting",
 		},
 	}
+	cmd.Commands = []*cli.Command{
+		{
+			Name:  "greet",
+			Usage: "send a greeting",
+			Commands: []*cli.Command{
+				{
+					Name:  "hello",
+					Usage: "say hello",
+					Action: func(_ context.Context, _ *cli.Command) error {
+						fmt.Println("hello!")
+						return nil
+					},
+				},
+			},
+		},
+	}
+	ccli.Apply(cmd) // colored help for all subcommands
 	cmd.Action = func(_ context.Context, _ *cli.Command) error {
 		fmt.Println("boom! I say!")
 		return nil
