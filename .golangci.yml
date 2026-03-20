@@ -145,6 +145,10 @@ linters:
       - linters:
           - forbidigo
         path: example/
+      - linters:
+          - testableexamples
+          - gocritic
+        path: example_test\.go
     paths:
       - third_party$
       - builtin$
