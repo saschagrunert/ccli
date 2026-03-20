@@ -98,6 +98,23 @@ follow the [urfave/cli v3 migration guide](https://github.com/urfave/cli/blob/ma
 The main change is that `cli.App` has been replaced by `cli.Command`, so
 `NewApp` is now `NewCommand`.
 
+## Subcommand colors
+
+Subcommands added after creating the root command don't automatically get
+colored help. Call `Apply` (or `ApplyWithOptions`) after setting up your
+command tree:
+
+```go
+cmd := ccli.NewCommand()
+cmd.Commands = []*cli.Command{
+	{Name: "serve", Usage: "start the server"},
+	{Name: "config", Usage: "manage config", Commands: []*cli.Command{
+		{Name: "show", Usage: "show config"},
+	}},
+}
+ccli.Apply(cmd) // recursively sets colored templates on all subcommands
+```
+
 ## Notes
 
 All help templates are set per-command via `CustomRootCommandHelpTemplate`

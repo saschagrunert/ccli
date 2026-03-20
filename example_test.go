@@ -3,6 +3,7 @@ package ccli_test
 import (
 	"github.com/fatih/color"
 	"github.com/saschagrunert/ccli/v3"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -42,6 +43,19 @@ func ExampleNewCommandWith() {
 	)
 	cmd.Name = exampleAppName
 	cmd.Usage = exampleUsage
+
+	// cmd.Run(context.Background(), os.Args)
+}
+
+func ExampleApply() {
+	cmd := ccli.NewCommand()
+	cmd.Name = exampleAppName
+	cmd.Usage = exampleUsage
+	cmd.Commands = []*cli.Command{
+		{Name: "serve", Usage: "start the server"},
+	}
+
+	ccli.Apply(cmd)
 
 	// cmd.Run(context.Background(), os.Args)
 }

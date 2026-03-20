@@ -181,6 +181,50 @@ func NewCommandWithOptions(opts Options) *cli.Command {
 	return cmd
 }
 
+// Apply recursively sets colored help templates on all subcommands of cmd
+// using default colors. Call this after adding subcommands to ensure they
+// get colored help output.
+func Apply(cmd *cli.Command) {
+	ApplyWithOptions(cmd, defaultOptions())
+}
+
+// ApplyWith recursively sets colored help templates on all subcommands of cmd
+// using functional options. Call this after adding subcommands.
+func ApplyWith(cmd *cli.Command, opts ...Option) {
+	options := Options{
+		Blue:    nil,
+		Cyan:    nil,
+		Green:   nil,
+		Red:     nil,
+		Yellow:  nil,
+		Disable: false,
+	}
+
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	ApplyWithOptions(cmd, options)
+}
+
+// ApplyWithOptions recursively sets colored help templates on all subcommands
+// of cmd using the provided color options. Call this after adding subcommands.
+func ApplyWithOptions(cmd *cli.Command, opts Options) {
+	opts = resolveOptions(opts)
+	tpl := commandHelpTemplate(opts)
+	applyTemplates(cmd.Commands, tpl)
+}
+
+func applyTemplates(cmds []*cli.Command, tpl string) {
+	for _, sub := range cmds {
+		if sub.CustomHelpTemplate == "" {
+			sub.CustomHelpTemplate = tpl
+		}
+
+		applyTemplates(sub.Commands, tpl)
+	}
+}
+
 func rootCommandHelpTemplate(opts Options) string {
 	return fmt.Sprintf(
 		`%s

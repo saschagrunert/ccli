@@ -352,6 +352,160 @@ func TestNestedSubcommandHelpOutput(t *testing.T) {
 	}
 }
 
+func TestApply(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommand()
+	cmd.Name = testAppName
+	cmd.Commands = []*cli.Command{
+		{
+			Name:  "sub1",
+			Usage: "first subcommand",
+			Commands: []*cli.Command{
+				{
+					Name:  "nested",
+					Usage: "nested subcommand",
+				},
+			},
+		},
+		{
+			Name:  "sub2",
+			Usage: "second subcommand",
+		},
+	}
+
+	ccli.Apply(cmd)
+
+	for _, sub := range cmd.Commands {
+		if sub.CustomHelpTemplate == "" {
+			t.Errorf("subcommand %q should have CustomHelpTemplate set", sub.Name)
+		}
+	}
+
+	nested := cmd.Commands[0].Commands[0]
+	if nested.CustomHelpTemplate == "" {
+		t.Error("nested subcommand should have CustomHelpTemplate set")
+	}
+}
+
+func TestApplyPreservesExisting(t *testing.T) {
+	t.Parallel()
+
+	custom := "custom template"
+
+	cmd := ccli.NewCommand()
+	cmd.Commands = []*cli.Command{
+		{
+			Name:               "custom",
+			CustomHelpTemplate: custom,
+		},
+		{
+			Name: "default",
+		},
+	}
+
+	ccli.Apply(cmd)
+
+	if cmd.Commands[0].CustomHelpTemplate != custom {
+		t.Error("Apply should not overwrite existing CustomHelpTemplate")
+	}
+
+	if cmd.Commands[1].CustomHelpTemplate == "" {
+		t.Error("Apply should set CustomHelpTemplate on subcommands without one")
+	}
+}
+
+func TestApplyWithOptions(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
+		Blue:    nil,
+		Cyan:    nil,
+		Green:   nil,
+		Red:     nil,
+		Yellow:  nil,
+		Disable: true,
+	})
+	cmd.Commands = []*cli.Command{
+		{Name: "sub"},
+	}
+
+	ccli.ApplyWithOptions(cmd, ccli.Options{
+		Blue:    nil,
+		Cyan:    nil,
+		Green:   nil,
+		Red:     nil,
+		Yellow:  nil,
+		Disable: true,
+	})
+
+	tpl := cmd.Commands[0].CustomHelpTemplate
+	if tpl == "" {
+		t.Fatal("subcommand should have CustomHelpTemplate set")
+	}
+
+	if strings.Contains(tpl, "\033[") {
+		t.Error("disabled template should not contain ANSI escape codes")
+	}
+}
+
+func TestApplyWith(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommand()
+	cmd.Commands = []*cli.Command{
+		{Name: "sub"},
+	}
+
+	ccli.ApplyWith(cmd, ccli.WithDisable())
+
+	tpl := cmd.Commands[0].CustomHelpTemplate
+	if tpl == "" {
+		t.Fatal("subcommand should have CustomHelpTemplate set")
+	}
+
+	if strings.Contains(tpl, "\033[") {
+		t.Error("disabled template should not contain ANSI escape codes")
+	}
+}
+
+func TestSubcommandHelpOutputWithApply(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
+	cmd.Commands = []*cli.Command{
+		{
+			Name:  "greet",
+			Usage: "say hello",
+			Commands: []*cli.Command{
+				{
+					Name:  "world",
+					Usage: "greet the world",
+				},
+			},
+		},
+	}
+
+	ccli.ApplyWithOptions(cmd, noColorOptions())
+
+	var buf bytes.Buffer
+
+	cmd.Writer = &buf
+
+	err := cmd.Run(context.Background(), []string{testAppName, "greet", "world", "--help"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := buf.String()
+	for _, expected := range []string{"world", "greet the world", "NAME:", "USAGE:"} {
+		if !strings.Contains(output, expected) {
+			t.Errorf("nested subcommand help missing %q, got:\n%s", expected, output)
+		}
+	}
+}
+
 func TestNoGlobalTemplateMutation(t *testing.T) {
 	t.Parallel()
 
