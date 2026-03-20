@@ -11,30 +11,42 @@ import (
 func NewApp() *cli.App {
 	app := cli.NewApp()
 	app.Writer = color.Output
+
 	setAppTemplates()
 
 	return app
 }
 
 func setAppTemplates() {
-	// Set the colors
 	blue := color.New(color.FgBlue).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	// Set the application help template
-	cli.AppHelpTemplate = fmt.Sprintf(`%s {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
+	setAppHelpTemplate(cyan, green, blue, yellow, red)
+	setCommandHelpTemplate(yellow)
+	setSubcommandHelpTemplate(yellow)
+}
+
+func setAppHelpTemplate(
+	cyan, green, blue, yellow, red func(a ...any) string,
+) {
+	cli.AppHelpTemplate = fmt.Sprintf(
+		`%s {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
 {{if .Usage}}{{.Usage}}{{end}}
 
 %s
-    %s {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Description}}
+    %s {{if .VisibleFlags}}[global options]{{end}}`+
+			`{{if .Commands}} command [command options]{{end}} `+
+			`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
+			`[arguments...]{{end}}{{end}}{{if .Description}}
 
 %s
     {{.Description}}{{end}}{{if len .Authors}}
 
-%s{{with $length := len .Authors}}{{if ne 1 $length}}%s{{end}}{{end}}%s
+%s{{with $length := len .Authors}}`+
+			`{{if ne 1 $length}}%s{{end}}{{end}}%s
     {{range $index, $author := .Authors}}{{if $index}}
     {{end}}%s{{end}}{{end}}{{if .VisibleCommands}}
 
@@ -58,14 +70,18 @@ func setAppTemplates() {
 		yellow("COMMANDS:"),
 		green(`{{join .Names ", "}}`),
 		yellow("GLOBAL OPTIONS:"),
-		red("{{.Copyright}}"))
+		red("{{.Copyright}}"),
+	)
+}
 
-	// Set the command help template
+func setCommandHelpTemplate(yellow func(a ...any) string) {
 	cli.CommandHelpTemplate = fmt.Sprintf(`%s
     {{.HelpName}} - {{.Usage}}
 
 %s
-    {{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{if .Category}}
+    {{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} `+
+		`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
+		`[arguments...]{{end}}{{if .Category}}
 
 %s
     {{.Category}}{{end}}{{if .Description}}
@@ -80,14 +96,19 @@ func setAppTemplates() {
 		yellow("USAGE:"),
 		yellow("CATEGORY:"),
 		yellow("DESCRIPTION:"),
-		yellow("OPTIONS:"))
+		yellow("OPTIONS:"),
+	)
+}
 
-	// Set the subcommand help template
+func setSubcommandHelpTemplate(yellow func(a ...any) string) {
 	cli.SubcommandHelpTemplate = fmt.Sprintf(`%s
-    {{.HelpName}} - {{if .Description}}{{.Description}}{{else}}{{.Usage}}{{end}}
+    {{.HelpName}} - `+
+		`{{if .Description}}{{.Description}}{{else}}{{.Usage}}{{end}}
 
 %s
-    {{.HelpName}} command{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}
+    {{.HelpName}} command{{if .VisibleFlags}} [command options]{{end}} `+
+		`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
+		`[arguments...]{{end}}
 
 %s{{range .VisibleCategories}}{{if .Name}}
     {{.Name}}:{{end}}{{range .VisibleCommands}}
@@ -99,5 +120,6 @@ func setAppTemplates() {
 `, yellow("NAME:"),
 		yellow("USAGE:"),
 		yellow("COMMANDS:"),
-		yellow("OPTIONS:"))
+		yellow("OPTIONS:"),
+	)
 }

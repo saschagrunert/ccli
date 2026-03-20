@@ -24,12 +24,15 @@ func main() {
 			Usage: "language for the greeting",
 		},
 	}
-	app.Action = func(c *cli.Context) error {
+
+	app.Action = func(_ *cli.Context) error {
 		fmt.Println("boom! I say!")
 
 		return nil
 	}
-	if err := app.Run(os.Args); err != nil {
+
+	err := app.Run(os.Args)
+	if err != nil {
 		os.Exit(1)
 	}
 }
