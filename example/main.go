@@ -15,7 +15,7 @@ func main() {
 	app.Usage = "App usage..."
 	app.Version = "0.1.0"
 	app.Description = "Application description"
-	app.Copyright = fmt.Sprintf("© %d Some Company", time.Now().Year())
+	app.Copyright = fmt.Sprintf("(c) %d Some Company", time.Now().Year())
 	app.Authors = []*cli.Author{{Name: "Name", Email: "e@mail.com"}}
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
