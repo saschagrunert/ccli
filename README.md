@@ -1,6 +1,6 @@
 # ccli
 
-[![ci](https://github.com/saschagrunert/ccli/actions/workflows/test.yml/badge.svg)](https://github.com/saschagrunert/ccli/actions/workflows/test.yml)
+[![ci](https://github.com/saschagrunert/ccli/actions/workflows/ci.yml/badge.svg)](https://github.com/saschagrunert/ccli/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/saschagrunert/ccli/v3.svg)](https://pkg.go.dev/github.com/saschagrunert/ccli/v3)
 
 ## Command line parsing in Go, with coloring support
