@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // ColorFunc is a function that colorizes a string.
@@ -130,23 +130,18 @@ func defaultOptions() Options {
 	return cachedDefaults
 }
 
-// NewApp creates a new application with colored help output using default
-// colors.
-//
-// This function sets cli.CommandHelpTemplate and cli.SubcommandHelpTemplate
-// as package-level globals. The app help template is set per-app via
-// CustomAppHelpTemplate to avoid global side effects for that template.
-func NewApp() *cli.App {
-	return NewAppWithOptions(defaultOptions())
+// NewCommand creates a new root command with colored help output using
+// default colors. All help templates are set per-command via
+// CustomRootCommandHelpTemplate and CustomHelpTemplate, avoiding
+// global side effects.
+func NewCommand() *cli.Command {
+	return NewCommandWithOptions(defaultOptions())
 }
 
-// NewAppWith creates a new application with colored help output, configured
-// by functional options. Unset colors fall back to defaults.
-//
-// This function sets cli.CommandHelpTemplate and cli.SubcommandHelpTemplate
-// as package-level globals. The app help template is set per-app via
-// CustomAppHelpTemplate to avoid global side effects for that template.
-func NewAppWith(opts ...Option) *cli.App {
+// NewCommandWith creates a new root command with colored help output,
+// configured by functional options. Unset colors fall back to defaults.
+// All help templates are set per-command, avoiding global side effects.
+func NewCommandWith(opts ...Option) *cli.Command {
 	options := Options{
 		Blue:    nil,
 		Cyan:    nil,
@@ -160,131 +155,112 @@ func NewAppWith(opts ...Option) *cli.App {
 		opt(&options)
 	}
 
-	return NewAppWithOptions(options)
+	return NewCommandWithOptions(options)
 }
 
-// NewAppWithOptions creates a new application with colored help output using
-// the provided color options. Any nil color function in opts falls back to
-// the default color. Set Disable to true to turn off all coloring.
-//
-// This function sets cli.CommandHelpTemplate and cli.SubcommandHelpTemplate
-// as package-level globals. The app help template is set per-app via
-// CustomAppHelpTemplate to avoid global side effects for that template.
-func NewAppWithOptions(opts Options) *cli.App {
+// NewCommandWithOptions creates a new root command with colored help output
+// using the provided color options. Any nil color function in opts falls
+// back to the default color. Set Disable to true to turn off all coloring.
+// All help templates are set per-command, avoiding global side effects.
+func NewCommandWithOptions(opts Options) *cli.Command {
 	opts = resolveOptions(opts)
 
-	app := cli.NewApp()
+	cmd := &cli.Command{}
 
 	if opts.Disable {
-		app.Writer = os.Stdout
-		app.ErrWriter = os.Stderr
+		cmd.Writer = os.Stdout
+		cmd.ErrWriter = os.Stderr
 	} else {
-		app.Writer = color.Output
-		app.ErrWriter = color.Error
+		cmd.Writer = color.Output
+		cmd.ErrWriter = color.Error
 	}
 
-	app.CustomAppHelpTemplate = appHelpTemplate(opts)
+	cmd.CustomRootCommandHelpTemplate = rootCommandHelpTemplate(opts)
+	cmd.CustomHelpTemplate = commandHelpTemplate(opts)
 
-	setCommandHelpTemplate(opts)
-	setSubcommandHelpTemplate(opts)
-
-	return app
+	return cmd
 }
 
-func appHelpTemplate(opts Options) string {
+func rootCommandHelpTemplate(opts Options) string {
 	return fmt.Sprintf(
-		`%s {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
-{{if .Usage}}{{.Usage}}{{end}}
+		`%s
+   {{$v := offset .FullName 6}}%s{{if .Usage}} - {{wrap .Usage $v}}{{end}}
 
 %s
-    %s {{if .VisibleFlags}}[global options]{{end}}`+
-			`{{if .Commands}} command [command options]{{end}} `+
+   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}%s `+
+			`{{if .VisibleFlags}}[global options]{{end}}`+
+			`{{if .VisibleCommands}} [command [command options]]{{end}} `+
 			`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
-			`[arguments...]{{end}}{{end}}{{if .Description}}
+			`{{if .Arguments}}[arguments...]{{end}}{{end}}{{end}}`+
+			`{{if .Version}}{{if not .HideVersion}}
 
 %s
-    {{.Description}}{{end}}{{if len .Authors}}
+   {{.Version}}{{end}}{{end}}{{if .Description}}
+
+%s
+   {{template "descriptionTemplate" .}}{{end}}
+{{- if len .Authors}}
 
 %s{{with $length := len .Authors}}`+
 			`{{if ne 1 $length}}%s{{end}}{{end}}%s
-    {{range $index, $author := .Authors}}{{if $index}}
-    {{end}}%s{{end}}{{end}}{{if .VisibleCommands}}
+   {{range $index, $author := .Authors}}{{if $index}}
+   {{end}}%s{{end}}{{end}}{{if .VisibleCommands}}
 
-%s{{range .VisibleCategories}}{{if .Name}}
-    {{.Name}}:{{end}}{{range .VisibleCommands}}
-    %s{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+%s{{template "visibleCommandCategoryTemplate" .}}{{end}}`+
+			`{{if .VisibleFlagCategories}}
+
+%s{{template "visibleFlagCategoryTemplate" .}}`+
+			`{{else if .VisibleFlags}}
+
+%s{{template "visibleFlagTemplate" .}}{{end}}{{if .Copyright}}
 
 %s
-    {{range $index, $option := .VisibleFlags}}{{if $index}}
-    {{end}}{{$option}}{{end}}{{end}}{{if .Copyright}}
-
-%s{{end}}
-`, opts.Green("{{.Name}}"),
+   {{template "copyrightTemplate" .}}{{end}}
+`, opts.Yellow("NAME:"),
+		opts.Green("{{wrap .FullName 3}}"),
 		opts.Yellow("USAGE:"),
-		opts.Cyan("{{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}"),
+		opts.Cyan("{{.FullName}}"),
+		opts.Yellow("VERSION:"),
 		opts.Yellow("DESCRIPTION:"),
 		opts.Yellow("AUTHOR"),
 		opts.Yellow("S"),
 		opts.Yellow(":"),
 		opts.Blue("{{$author}}"),
 		opts.Yellow("COMMANDS:"),
-		opts.Green(`{{join .Names ", "}}`),
 		opts.Yellow("GLOBAL OPTIONS:"),
-		opts.Red("{{.Copyright}}"),
+		opts.Yellow("GLOBAL OPTIONS:"),
+		opts.Yellow("COPYRIGHT:"),
 	)
 }
 
-func setCommandHelpTemplate(opts Options) {
-	cli.CommandHelpTemplate = fmt.Sprintf(`%s
-    %s - {{.Usage}}
+func commandHelpTemplate(opts Options) string {
+	return fmt.Sprintf(
+		`%s
+   {{$v := offset .FullName 6}}%s{{if .Usage}} - {{wrap .Usage $v}}{{end}}
 
 %s
-    %s{{if .VisibleFlags}} [command options]{{end}} `+
-		`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
-		`[arguments...]{{end}}{{if .Category}}
+   {{template "usageTemplate" .}}{{if .Category}}
 
 %s
-    {{.Category}}{{end}}{{if .Description}}
+   {{.Category}}{{end}}{{if .Description}}
 
 %s
-    {{.Description}}{{end}}{{if .VisibleFlags}}
+   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
 
-%s
-    {{range .VisibleFlags}}{{.}}
-    {{end}}{{end}}
+%s{{template "visibleFlagCategoryTemplate" .}}`+
+			`{{else if .VisibleFlags}}
+
+%s{{template "visibleFlagTemplate" .}}{{end}}`+
+			`{{if .VisiblePersistentFlags}}
+
+%s{{template "visiblePersistentFlagTemplate" .}}{{end}}
 `, opts.Yellow("NAME:"),
-		opts.Green("{{.HelpName}}"),
+		opts.Green("{{wrap .FullName 3}}"),
 		opts.Yellow("USAGE:"),
-		opts.Cyan("{{.HelpName}}"),
 		opts.Yellow("CATEGORY:"),
 		opts.Yellow("DESCRIPTION:"),
 		opts.Yellow("OPTIONS:"),
-	)
-}
-
-func setSubcommandHelpTemplate(opts Options) {
-	cli.SubcommandHelpTemplate = fmt.Sprintf(`%s
-    %s - `+
-		`{{if .Description}}{{.Description}}{{else}}{{.Usage}}{{end}}
-
-%s
-    %s command{{if .VisibleFlags}} [command options]{{end}} `+
-		`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
-		`[arguments...]{{end}}
-
-%s{{range .VisibleCategories}}{{if .Name}}
-    {{.Name}}:{{end}}{{range .VisibleCommands}}
-    %s{{"\t"}}{{.Usage}}{{end}}
-{{end}}{{if .VisibleFlags}}
-%s
-    {{range .VisibleFlags}}{{.}}
-    {{end}}{{end}}
-`, opts.Yellow("NAME:"),
-		opts.Green("{{.HelpName}}"),
-		opts.Yellow("USAGE:"),
-		opts.Cyan("{{.HelpName}}"),
-		opts.Yellow("COMMANDS:"),
-		opts.Green(`{{join .Names ", "}}`),
 		opts.Yellow("OPTIONS:"),
+		opts.Yellow("GLOBAL OPTIONS:"),
 	)
 }

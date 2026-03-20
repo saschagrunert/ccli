@@ -2,7 +2,7 @@ package ccli_test
 
 import (
 	"github.com/fatih/color"
-	"github.com/saschagrunert/ccli/v2"
+	"github.com/saschagrunert/ccli/v3"
 )
 
 const (
@@ -12,16 +12,16 @@ const (
 )
 
 func Example() {
-	app := ccli.NewApp()
-	app.Name = exampleAppName
-	app.Usage = exampleUsage
-	app.Version = exampleVersion
+	cmd := ccli.NewCommand()
+	cmd.Name = exampleAppName
+	cmd.Usage = exampleUsage
+	cmd.Version = exampleVersion
 
-	// app.Run(os.Args)
+	// cmd.Run(context.Background(), os.Args)
 }
 
-func ExampleNewAppWithOptions() {
-	app := ccli.NewAppWithOptions(ccli.Options{
+func ExampleNewCommandWithOptions() {
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Green:   color.New(color.FgHiGreen).SprintFunc(),
 		Yellow:  color.New(color.FgHiYellow).SprintFunc(),
 		Blue:    nil,
@@ -29,27 +29,27 @@ func ExampleNewAppWithOptions() {
 		Red:     nil,
 		Disable: false,
 	})
-	app.Name = exampleAppName
-	app.Usage = exampleUsage
+	cmd.Name = exampleAppName
+	cmd.Usage = exampleUsage
 
-	// app.Run(os.Args)
+	// cmd.Run(context.Background(), os.Args)
 }
 
-func ExampleNewAppWith() {
-	app := ccli.NewAppWith(
+func ExampleNewCommandWith() {
+	cmd := ccli.NewCommandWith(
 		ccli.WithGreen(color.New(color.FgHiGreen).SprintFunc()),
 		ccli.WithYellow(color.New(color.FgHiYellow).SprintFunc()),
 	)
-	app.Name = exampleAppName
-	app.Usage = exampleUsage
+	cmd.Name = exampleAppName
+	cmd.Usage = exampleUsage
 
-	// app.Run(os.Args)
+	// cmd.Run(context.Background(), os.Args)
 }
 
-func ExampleNewAppWith_disable() {
-	app := ccli.NewAppWith(ccli.WithDisable())
-	app.Name = exampleAppName
-	app.Usage = exampleUsage
+func ExampleNewCommandWith_disable() {
+	cmd := ccli.NewCommandWith(ccli.WithDisable())
+	cmd.Name = exampleAppName
+	cmd.Usage = exampleUsage
 
-	// app.Run(os.Args)
+	// cmd.Run(context.Background(), os.Args)
 }

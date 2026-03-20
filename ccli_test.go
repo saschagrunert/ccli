@@ -2,14 +2,15 @@ package ccli_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/fatih/color"
-	"github.com/saschagrunert/ccli/v2"
-	"github.com/urfave/cli/v2"
+	"github.com/saschagrunert/ccli/v3"
+	"github.com/urfave/cli/v3"
 )
 
 const testAppName = "testapp"
@@ -25,28 +26,32 @@ func noColorOptions() ccli.Options {
 	}
 }
 
-func TestNewApp(t *testing.T) {
+func TestNewCommand(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewApp()
-	if app == nil {
-		t.Fatal("NewApp returned nil")
+	cmd := ccli.NewCommand()
+	if cmd == nil {
+		t.Fatal("NewCommand returned nil")
 	}
 
-	if app.Writer != color.Output {
+	if cmd.Writer != color.Output {
 		t.Error("Writer should be color.Output")
 	}
 
-	if app.ErrWriter != color.Error {
+	if cmd.ErrWriter != color.Error {
 		t.Error("ErrWriter should be color.Error")
 	}
 
-	if app.CustomAppHelpTemplate == "" {
-		t.Error("CustomAppHelpTemplate should be set")
+	if cmd.CustomRootCommandHelpTemplate == "" {
+		t.Error("CustomRootCommandHelpTemplate should be set")
+	}
+
+	if cmd.CustomHelpTemplate == "" {
+		t.Error("CustomHelpTemplate should be set")
 	}
 }
 
-func TestNewAppWith(t *testing.T) {
+func TestNewCommandWith(t *testing.T) {
 	t.Parallel()
 
 	called := false
@@ -56,12 +61,12 @@ func TestNewAppWith(t *testing.T) {
 		return "custom"
 	})
 
-	app := ccli.NewAppWith(
+	cmd := ccli.NewCommandWith(
 		ccli.WithGreen(custom),
 		ccli.WithYellow(custom),
 	)
-	if app == nil {
-		t.Fatal("NewAppWith returned nil")
+	if cmd == nil {
+		t.Fatal("NewCommandWith returned nil")
 	}
 
 	if !called {
@@ -69,24 +74,24 @@ func TestNewAppWith(t *testing.T) {
 	}
 }
 
-func TestNewAppWithDisable(t *testing.T) {
+func TestNewCommandWithDisable(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWith(ccli.WithDisable())
-	if app == nil {
-		t.Fatal("NewAppWith WithDisable returned nil")
+	cmd := ccli.NewCommandWith(ccli.WithDisable())
+	if cmd == nil {
+		t.Fatal("NewCommandWith WithDisable returned nil")
 	}
 
-	if app.Writer != os.Stdout {
+	if cmd.Writer != os.Stdout {
 		t.Error("Writer should be os.Stdout when disabled")
 	}
 
-	if app.ErrWriter != os.Stderr {
+	if cmd.ErrWriter != os.Stderr {
 		t.Error("ErrWriter should be os.Stderr when disabled")
 	}
 }
 
-func TestNewAppWithOptions(t *testing.T) {
+func TestNewCommandWithOptions(t *testing.T) {
 	t.Parallel()
 
 	called := false
@@ -96,7 +101,7 @@ func TestNewAppWithOptions(t *testing.T) {
 		return "custom"
 	})
 
-	app := ccli.NewAppWithOptions(ccli.Options{
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Blue:    custom,
 		Cyan:    custom,
 		Green:   custom,
@@ -104,8 +109,8 @@ func TestNewAppWithOptions(t *testing.T) {
 		Yellow:  custom,
 		Disable: false,
 	})
-	if app == nil {
-		t.Fatal("NewAppWithOptions returned nil")
+	if cmd == nil {
+		t.Fatal("NewCommandWithOptions returned nil")
 	}
 
 	if !called {
@@ -113,10 +118,10 @@ func TestNewAppWithOptions(t *testing.T) {
 	}
 }
 
-func TestNewAppWithOptionsNilFallback(t *testing.T) {
+func TestNewCommandWithOptionsNilFallback(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(ccli.Options{
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Blue:    nil,
 		Cyan:    nil,
 		Green:   nil,
@@ -124,16 +129,16 @@ func TestNewAppWithOptionsNilFallback(t *testing.T) {
 		Yellow:  nil,
 		Disable: false,
 	})
-	if app == nil {
-		t.Fatal("NewAppWithOptions returned nil with empty options")
+	if cmd == nil {
+		t.Fatal("NewCommandWithOptions returned nil with empty options")
 	}
 
-	if app.CustomAppHelpTemplate == "" {
-		t.Error("CustomAppHelpTemplate should be set even with empty options")
+	if cmd.CustomRootCommandHelpTemplate == "" {
+		t.Error("CustomRootCommandHelpTemplate should be set even with empty options")
 	}
 }
 
-func TestNewAppWithOptionsPartialOverride(t *testing.T) {
+func TestNewCommandWithOptionsPartialOverride(t *testing.T) {
 	t.Parallel()
 
 	greenCalled := false
@@ -143,7 +148,7 @@ func TestNewAppWithOptionsPartialOverride(t *testing.T) {
 		return "green"
 	})
 
-	app := ccli.NewAppWithOptions(ccli.Options{
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Blue:    nil,
 		Cyan:    nil,
 		Green:   customGreen,
@@ -151,23 +156,23 @@ func TestNewAppWithOptionsPartialOverride(t *testing.T) {
 		Yellow:  nil,
 		Disable: false,
 	})
-	if app == nil {
-		t.Fatal("NewAppWithOptions returned nil")
+	if cmd == nil {
+		t.Fatal("NewCommandWithOptions returned nil")
 	}
 
 	if !greenCalled {
 		t.Error("custom green function should have been called")
 	}
 
-	if app.CustomAppHelpTemplate == "" {
-		t.Error("CustomAppHelpTemplate should be set with partial options")
+	if cmd.CustomRootCommandHelpTemplate == "" {
+		t.Error("CustomRootCommandHelpTemplate should be set with partial options")
 	}
 }
 
-func TestNewAppWithOptionsDisable(t *testing.T) {
+func TestNewCommandWithOptionsDisable(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(ccli.Options{
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Blue:    nil,
 		Cyan:    nil,
 		Green:   nil,
@@ -175,42 +180,42 @@ func TestNewAppWithOptionsDisable(t *testing.T) {
 		Yellow:  nil,
 		Disable: true,
 	})
-	if app == nil {
-		t.Fatal("NewAppWithOptions returned nil with Disable")
+	if cmd == nil {
+		t.Fatal("NewCommandWithOptions returned nil with Disable")
 	}
 
-	if app.Writer != os.Stdout {
+	if cmd.Writer != os.Stdout {
 		t.Error("Writer should be os.Stdout when disabled")
 	}
 
-	if app.ErrWriter != os.Stderr {
+	if cmd.ErrWriter != os.Stderr {
 		t.Error("ErrWriter should be os.Stderr when disabled")
 	}
 
-	if !strings.Contains(app.CustomAppHelpTemplate, "USAGE:") {
+	if !strings.Contains(cmd.CustomRootCommandHelpTemplate, "USAGE:") {
 		t.Error("disabled template should still contain USAGE section")
 	}
 
 	// Verify no ANSI escape codes in the template.
-	if strings.Contains(app.CustomAppHelpTemplate, "\033[") {
+	if strings.Contains(cmd.CustomRootCommandHelpTemplate, "\033[") {
 		t.Error("disabled template should not contain ANSI escape codes")
 	}
 }
 
-func TestAppHelpOutput(t *testing.T) {
+func TestCommandHelpOutput(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(noColorOptions())
-	app.Name = testAppName
-	app.Usage = "a test application"
-	app.Version = "1.0.0"
-	app.Authors = []*cli.Author{{Name: "Test Author", Email: "test@test.com"}}
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
+	cmd.Usage = "a test application"
+	cmd.Version = "1.0.0"
+	cmd.Authors = []any{"Test Author <test@test.com>"}
 
 	var buf bytes.Buffer
 
-	app.Writer = &buf
+	cmd.Writer = &buf
 
-	err := app.Run([]string{testAppName, "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, "--help"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -218,12 +223,12 @@ func TestAppHelpOutput(t *testing.T) {
 	output := buf.String()
 	for _, expected := range []string{testAppName, "a test application", "1.0.0", "Test Author"} {
 		if !strings.Contains(output, expected) {
-			t.Errorf("help output missing %q", expected)
+			t.Errorf("help output missing %q, got:\n%s", expected, output)
 		}
 	}
 }
 
-func TestAppHelpRenderedColorCodes(t *testing.T) {
+func TestCommandHelpRenderedColorCodes(t *testing.T) {
 	t.Parallel()
 
 	green := color.New(color.FgGreen)
@@ -232,7 +237,7 @@ func TestAppHelpRenderedColorCodes(t *testing.T) {
 	yellow := color.New(color.FgYellow)
 	yellow.EnableColor()
 
-	app := ccli.NewAppWithOptions(ccli.Options{
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
 		Blue:    color.New(color.FgBlue).SprintFunc(),
 		Cyan:    color.New(color.FgCyan).SprintFunc(),
 		Green:   green.SprintFunc(),
@@ -240,15 +245,15 @@ func TestAppHelpRenderedColorCodes(t *testing.T) {
 		Yellow:  yellow.SprintFunc(),
 		Disable: false,
 	})
-	app.Name = "colorapp"
-	app.Usage = "a colored app"
-	app.Version = "1.0.0"
+	cmd.Name = "colorapp"
+	cmd.Usage = "a colored app"
+	cmd.Version = "1.0.0"
 
 	var buf bytes.Buffer
 
-	app.Writer = &buf
+	cmd.Writer = &buf
 
-	err := app.Run([]string{"colorapp", "--help"})
+	err := cmd.Run(context.Background(), []string{"colorapp", "--help"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -261,32 +266,32 @@ func TestAppHelpRenderedColorCodes(t *testing.T) {
 	}
 }
 
-func TestAppHelpInvalidFlag(t *testing.T) {
+func TestCommandHelpInvalidFlag(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(noColorOptions())
-	app.Name = testAppName
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
 
 	var errBuf bytes.Buffer
 
-	app.ErrWriter = &errBuf
+	cmd.ErrWriter = &errBuf
 
-	err := app.Run([]string{testAppName, "--nonexistent"})
+	err := cmd.Run(context.Background(), []string{testAppName, "--nonexistent"})
 	if err == nil {
 		t.Fatal("expected error for invalid flag")
 	}
 }
 
-func TestCommandHelpOutput(t *testing.T) {
+func TestSubcommandHelpOutput(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(noColorOptions())
-	app.Name = testAppName
-	app.Commands = []*cli.Command{
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
+	cmd.Commands = []*cli.Command{
 		{
 			Name:  "greet",
 			Usage: "say hello",
-			Action: func(_ *cli.Context) error {
+			Action: func(_ context.Context, _ *cli.Command) error {
 				return nil
 			},
 		},
@@ -294,9 +299,9 @@ func TestCommandHelpOutput(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	app.Writer = &buf
+	cmd.Writer = &buf
 
-	err := app.Run([]string{testAppName, "greet", "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, "greet", "--help"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -304,25 +309,25 @@ func TestCommandHelpOutput(t *testing.T) {
 	output := buf.String()
 	for _, expected := range []string{"greet", "say hello", "NAME:", "USAGE:"} {
 		if !strings.Contains(output, expected) {
-			t.Errorf("command help output missing %q", expected)
+			t.Errorf("subcommand help output missing %q, got:\n%s", expected, output)
 		}
 	}
 }
 
-func TestSubcommandHelpOutput(t *testing.T) {
+func TestNestedSubcommandHelpOutput(t *testing.T) {
 	t.Parallel()
 
-	app := ccli.NewAppWithOptions(noColorOptions())
-	app.Name = testAppName
-	app.Commands = []*cli.Command{
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
+	cmd.Commands = []*cli.Command{
 		{
 			Name:  "parent",
 			Usage: "parent command",
-			Subcommands: []*cli.Command{
+			Commands: []*cli.Command{
 				{
 					Name:  "child",
 					Usage: "child command",
-					Action: func(_ *cli.Context) error {
+					Action: func(_ context.Context, _ *cli.Command) error {
 						return nil
 					},
 				},
@@ -332,50 +337,52 @@ func TestSubcommandHelpOutput(t *testing.T) {
 
 	var buf bytes.Buffer
 
-	app.Writer = &buf
+	cmd.Writer = &buf
 
-	err := app.Run([]string{testAppName, "parent", "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, "parent", "--help"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	output := buf.String()
-	for _, expected := range []string{"parent", "child", "COMMANDS:", "NAME:"} {
+	for _, expected := range []string{"parent", "child", "NAME:"} {
 		if !strings.Contains(output, expected) {
-			t.Errorf("subcommand help output missing %q", expected)
+			t.Errorf("nested subcommand help output missing %q, got:\n%s", expected, output)
 		}
 	}
 }
 
-func TestCommandHelpTemplate(t *testing.T) {
+func TestNoGlobalTemplateMutation(t *testing.T) {
 	t.Parallel()
 
-	_ = ccli.NewApp()
+	originalRoot := cli.RootCommandHelpTemplate
+	originalCmd := cli.CommandHelpTemplate
+	originalSub := cli.SubcommandHelpTemplate
 
-	if cli.CommandHelpTemplate == "" {
-		t.Error("CommandHelpTemplate should be set after NewApp")
+	_ = ccli.NewCommand()
+
+	if cli.RootCommandHelpTemplate != originalRoot {
+		t.Error("NewCommand should not mutate cli.RootCommandHelpTemplate")
+	}
+
+	if cli.CommandHelpTemplate != originalCmd {
+		t.Error("NewCommand should not mutate cli.CommandHelpTemplate")
+	}
+
+	if cli.SubcommandHelpTemplate != originalSub {
+		t.Error("NewCommand should not mutate cli.SubcommandHelpTemplate")
 	}
 }
 
-func TestSubcommandHelpTemplate(t *testing.T) {
-	t.Parallel()
-
-	_ = ccli.NewApp()
-
-	if cli.SubcommandHelpTemplate == "" {
-		t.Error("SubcommandHelpTemplate should be set after NewApp")
-	}
-}
-
-func BenchmarkNewApp(b *testing.B) {
+func BenchmarkNewCommand(b *testing.B) {
 	b.ReportAllocs()
 
 	for b.Loop() {
-		_ = ccli.NewApp()
+		_ = ccli.NewCommand()
 	}
 }
 
-func BenchmarkNewAppWithOptions(b *testing.B) {
+func BenchmarkNewCommandWithOptions(b *testing.B) {
 	b.ReportAllocs()
 
 	opts := ccli.Options{
@@ -388,14 +395,14 @@ func BenchmarkNewAppWithOptions(b *testing.B) {
 	}
 
 	for b.Loop() {
-		_ = ccli.NewAppWithOptions(opts)
+		_ = ccli.NewCommandWithOptions(opts)
 	}
 }
 
-func BenchmarkNewAppWithDisable(b *testing.B) {
+func BenchmarkNewCommandWithDisable(b *testing.B) {
 	b.ReportAllocs()
 
 	for b.Loop() {
-		_ = ccli.NewAppWith(ccli.WithDisable())
+		_ = ccli.NewCommandWith(ccli.WithDisable())
 	}
 }

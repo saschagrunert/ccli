@@ -1,11 +1,11 @@
 # ccli
 
 [![ci](https://github.com/saschagrunert/ccli/actions/workflows/test.yml/badge.svg)](https://github.com/saschagrunert/ccli/actions/workflows/test.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/saschagrunert/ccli/v2.svg)](https://pkg.go.dev/github.com/saschagrunert/ccli/v2)
+[![Go Reference](https://pkg.go.dev/badge/github.com/saschagrunert/ccli/v3.svg)](https://pkg.go.dev/github.com/saschagrunert/ccli/v3)
 
 ## Command line parsing in Go, with coloring support
 
-This package wraps [urfave/cli](https://github.com/urfave/cli) and adds
+This package wraps [urfave/cli/v3](https://github.com/urfave/cli) and adds
 coloring to help output. Section headers, command names, author info, and
 copyright each get their own color.
 
@@ -16,7 +16,7 @@ copyright each get their own color.
 Install the package with:
 
 ```shell
-go get github.com/saschagrunert/ccli/v2
+go get github.com/saschagrunert/ccli/v3
 ```
 
 Then use it like the `cli` package:
@@ -25,34 +25,35 @@ Then use it like the `cli` package:
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/saschagrunert/ccli/v2"
-	"github.com/urfave/cli/v2"
+	"github.com/saschagrunert/ccli/v3"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	app := ccli.NewApp()
-	app.Name = "AppName"
-	app.Usage = "App usage..."
-	app.Version = "0.1.0"
-	app.Description = "Application description"
-	app.Copyright = fmt.Sprintf("(c) %d Some Company", time.Now().Year())
-	app.Authors = []*cli.Author{{Name: "Name", Email: "e@mail.com"}}
-	app.Flags = []cli.Flag{
+	cmd := ccli.NewCommand()
+	cmd.Name = "AppName"
+	cmd.Usage = "App usage..."
+	cmd.Version = "0.1.0"
+	cmd.Description = "Application description"
+	cmd.Copyright = fmt.Sprintf("(c) %d Some Company", time.Now().Year())
+	cmd.Authors = []any{"Name <e@mail.com>"}
+	cmd.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:  "lang",
 			Value: "english",
 			Usage: "language for the greeting",
 		},
 	}
-	app.Action = func(_ *cli.Context) error {
+	cmd.Action = func(_ context.Context, _ *cli.Command) error {
 		fmt.Println("boom! I say!")
 		return nil
 	}
-	if err := app.Run(os.Args); err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		os.Exit(1)
 	}
 }
@@ -60,24 +61,24 @@ func main() {
 
 ## Custom colors
 
-Use functional options with `NewAppWith`:
+Use functional options with `NewCommandWith`:
 
 ```go
 import (
 	"github.com/fatih/color"
-	"github.com/saschagrunert/ccli/v2"
+	"github.com/saschagrunert/ccli/v3"
 )
 
-app := ccli.NewAppWith(
+cmd := ccli.NewCommandWith(
 	ccli.WithGreen(color.New(color.FgHiGreen).SprintFunc()),
 	ccli.WithYellow(color.New(color.FgHiYellow).SprintFunc()),
 )
 ```
 
-Or pass an `Options` struct to `NewAppWithOptions`:
+Or pass an `Options` struct to `NewCommandWithOptions`:
 
 ```go
-app := ccli.NewAppWithOptions(ccli.Options{
+cmd := ccli.NewCommandWithOptions(ccli.Options{
 	Green:  color.New(color.FgHiGreen).SprintFunc(),
 	Yellow: color.New(color.FgHiYellow).SprintFunc(),
 })
@@ -86,14 +87,13 @@ app := ccli.NewAppWithOptions(ccli.Options{
 Any color left unset falls back to its default. To turn off all coloring:
 
 ```go
-app := ccli.NewAppWith(ccli.WithDisable())
+cmd := ccli.NewCommandWith(ccli.WithDisable())
 ```
 
 ## Notes
 
-Calling `NewApp` or `NewAppWithOptions` sets `cli.CommandHelpTemplate` and
-`cli.SubcommandHelpTemplate` as package-level globals. The app help template
-is set per-app via `CustomAppHelpTemplate` and does not affect other apps.
+All help templates are set per-command via `CustomRootCommandHelpTemplate`
+and `CustomHelpTemplate`. No package-level globals are modified.
 
 ## License
 

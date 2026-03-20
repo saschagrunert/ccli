@@ -1,23 +1,24 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/saschagrunert/ccli/v2"
-	"github.com/urfave/cli/v2"
+	"github.com/saschagrunert/ccli/v3"
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	app := ccli.NewApp()
-	app.Name = "AppName"
-	app.Usage = "App usage..."
-	app.Version = "0.1.0"
-	app.Description = "Application description"
-	app.Copyright = fmt.Sprintf("(c) %d Some Company", time.Now().Year())
-	app.Authors = []*cli.Author{{Name: "Name", Email: "e@mail.com"}}
-	app.Flags = []cli.Flag{
+	cmd := ccli.NewCommand()
+	cmd.Name = "AppName"
+	cmd.Usage = "App usage..."
+	cmd.Version = "0.1.0"
+	cmd.Description = "Application description"
+	cmd.Copyright = fmt.Sprintf("(c) %d Some Company", time.Now().Year())
+	cmd.Authors = []any{"Name <e@mail.com>"}
+	cmd.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:  "lang",
 			Value: "english",
@@ -25,13 +26,13 @@ func main() {
 		},
 	}
 
-	app.Action = func(_ *cli.Context) error {
+	cmd.Action = func(_ context.Context, _ *cli.Command) error {
 		fmt.Println("boom! I say!")
 
 		return nil
 	}
 
-	err := app.Run(os.Args)
+	err := cmd.Run(context.Background(), os.Args)
 	if err != nil {
 		os.Exit(1)
 	}
