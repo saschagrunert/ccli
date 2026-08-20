@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/fatih/color v1.19.0
-	github.com/urfave/cli/v3 v3.10.1
+	github.com/urfave/cli/v3 v3.11.0
 )
 
 require (
