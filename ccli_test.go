@@ -13,7 +13,19 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const testAppName = "testapp"
+const (
+	testAppName    = "testapp"
+	testCustom     = "custom"
+	testHelpFlag   = "--help"
+	testGreetName  = "greet"
+	testGreetUsage = "say hello"
+	testParentName = "parent"
+	testChildName  = "child"
+	testChildUsage = "child command"
+	testSubName    = "sub"
+	testWorldName  = "world"
+	testNameHeader = "NAME:"
+)
 
 func noColorOptions() ccli.Options {
 	return ccli.Options{
@@ -58,7 +70,7 @@ func TestNewCommandWith(t *testing.T) {
 	custom := ccli.ColorFunc(func(_ ...any) string {
 		called = true
 
-		return "custom"
+		return testCustom
 	})
 
 	cmd := ccli.NewCommandWith(
@@ -71,6 +83,51 @@ func TestNewCommandWith(t *testing.T) {
 
 	if !called {
 		t.Error("custom color function should have been called for templates")
+	}
+}
+
+func TestNewCommandWithAllColorOptions(t *testing.T) {
+	t.Parallel()
+
+	var blueCalled, cyanCalled, redCalled bool
+
+	cmd := ccli.NewCommandWith(
+		ccli.WithBlue(func(_ ...any) string {
+			blueCalled = true
+
+			return "blue"
+		}),
+		ccli.WithCyan(func(_ ...any) string {
+			cyanCalled = true
+
+			return "cyan"
+		}),
+		ccli.WithGreen(func(_ ...any) string {
+			return "green"
+		}),
+		ccli.WithRed(func(_ ...any) string {
+			redCalled = true
+
+			return "red"
+		}),
+		ccli.WithYellow(func(_ ...any) string {
+			return "yellow"
+		}),
+	)
+	if cmd == nil {
+		t.Fatal("NewCommandWith returned nil")
+	}
+
+	if !blueCalled {
+		t.Error("WithBlue color function should have been called")
+	}
+
+	if !cyanCalled {
+		t.Error("WithCyan color function should have been called")
+	}
+
+	if !redCalled {
+		t.Error("WithRed color function should have been called")
 	}
 }
 
@@ -98,7 +155,7 @@ func TestNewCommandWithOptions(t *testing.T) {
 	custom := ccli.ColorFunc(func(_ ...any) string {
 		called = true
 
-		return "custom"
+		return testCustom
 	})
 
 	cmd := ccli.NewCommandWithOptions(ccli.Options{
@@ -208,20 +265,20 @@ func TestCommandHelpOutput(t *testing.T) {
 	cmd := ccli.NewCommandWithOptions(noColorOptions())
 	cmd.Name = testAppName
 	cmd.Usage = "a test application"
-	cmd.Version = "1.0.0"
+	cmd.Version = exampleVersion
 	cmd.Authors = []any{"Test Author <test@test.com>"}
 
 	var buf bytes.Buffer
 
 	cmd.Writer = &buf
 
-	err := cmd.Run(context.Background(), []string{testAppName, "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, testHelpFlag})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	output := buf.String()
-	for _, expected := range []string{testAppName, "a test application", "1.0.0", "Test Author"} {
+	for _, expected := range []string{testAppName, "a test application", exampleVersion, "Test Author"} {
 		if !strings.Contains(output, expected) {
 			t.Errorf("help output missing %q, got:\n%s", expected, output)
 		}
@@ -247,13 +304,13 @@ func TestCommandHelpRenderedColorCodes(t *testing.T) {
 	})
 	cmd.Name = "colorapp"
 	cmd.Usage = "a colored app"
-	cmd.Version = "1.0.0"
+	cmd.Version = exampleVersion
 
 	var buf bytes.Buffer
 
 	cmd.Writer = &buf
 
-	err := cmd.Run(context.Background(), []string{"colorapp", "--help"})
+	err := cmd.Run(context.Background(), []string{"colorapp", testHelpFlag})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -289,8 +346,8 @@ func TestSubcommandHelpOutput(t *testing.T) {
 	cmd.Name = testAppName
 	cmd.Commands = []*cli.Command{
 		{
-			Name:  "greet",
-			Usage: "say hello",
+			Name:  testGreetName,
+			Usage: testGreetUsage,
 			Action: func(_ context.Context, _ *cli.Command) error {
 				return nil
 			},
@@ -301,13 +358,13 @@ func TestSubcommandHelpOutput(t *testing.T) {
 
 	cmd.Writer = &buf
 
-	err := cmd.Run(context.Background(), []string{testAppName, "greet", "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, testGreetName, testHelpFlag})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	output := buf.String()
-	for _, expected := range []string{"greet", "say hello", "NAME:", "USAGE:"} {
+	for _, expected := range []string{testGreetName, testGreetUsage, testNameHeader, "USAGE:"} {
 		if !strings.Contains(output, expected) {
 			t.Errorf("subcommand help output missing %q, got:\n%s", expected, output)
 		}
@@ -321,12 +378,12 @@ func TestNestedSubcommandHelpOutput(t *testing.T) {
 	cmd.Name = testAppName
 	cmd.Commands = []*cli.Command{
 		{
-			Name:  "parent",
+			Name:  testParentName,
 			Usage: "parent command",
 			Commands: []*cli.Command{
 				{
-					Name:  "child",
-					Usage: "child command",
+					Name:  testChildName,
+					Usage: testChildUsage,
 					Action: func(_ context.Context, _ *cli.Command) error {
 						return nil
 					},
@@ -339,13 +396,13 @@ func TestNestedSubcommandHelpOutput(t *testing.T) {
 
 	cmd.Writer = &buf
 
-	err := cmd.Run(context.Background(), []string{testAppName, "parent", "--help"})
+	err := cmd.Run(context.Background(), []string{testAppName, testParentName, testHelpFlag})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	output := buf.String()
-	for _, expected := range []string{"parent", "child", "NAME:"} {
+	for _, expected := range []string{testParentName, testChildName, testNameHeader} {
 		if !strings.Contains(output, expected) {
 			t.Errorf("nested subcommand help output missing %q, got:\n%s", expected, output)
 		}
@@ -391,13 +448,13 @@ func TestApply(t *testing.T) {
 func TestApplyPreservesExisting(t *testing.T) {
 	t.Parallel()
 
-	custom := "custom template"
+	customTpl := "custom template"
 
 	cmd := ccli.NewCommand()
 	cmd.Commands = []*cli.Command{
 		{
-			Name:               "custom",
-			CustomHelpTemplate: custom,
+			Name:               testCustom,
+			CustomHelpTemplate: customTpl,
 		},
 		{
 			Name: "default",
@@ -406,12 +463,116 @@ func TestApplyPreservesExisting(t *testing.T) {
 
 	ccli.Apply(cmd)
 
-	if cmd.Commands[0].CustomHelpTemplate != custom {
+	if cmd.Commands[0].CustomHelpTemplate != customTpl {
 		t.Error("Apply should not overwrite existing CustomHelpTemplate")
 	}
 
 	if cmd.Commands[1].CustomHelpTemplate == "" {
 		t.Error("Apply should set CustomHelpTemplate on subcommands without one")
+	}
+}
+
+func TestApplyPropagatesWriter(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommand()
+	cmd.Commands = []*cli.Command{
+		{
+			Name: testSubName,
+			Commands: []*cli.Command{
+				{Name: "nested"},
+			},
+		},
+	}
+
+	ccli.Apply(cmd)
+
+	if cmd.Commands[0].Writer != color.Output {
+		t.Error("Apply should propagate Writer to subcommands")
+	}
+
+	if cmd.Commands[0].ErrWriter != color.Error {
+		t.Error("Apply should propagate ErrWriter to subcommands")
+	}
+
+	nested := cmd.Commands[0].Commands[0]
+	if nested.Writer != color.Output {
+		t.Error("Apply should propagate Writer to nested subcommands")
+	}
+
+	if nested.ErrWriter != color.Error {
+		t.Error("Apply should propagate ErrWriter to nested subcommands")
+	}
+}
+
+func TestApplyFallsBackToColorWriters(t *testing.T) {
+	t.Parallel()
+
+	cmd := &cli.Command{
+		Commands: []*cli.Command{
+			{Name: testSubName},
+		},
+	}
+
+	ccli.Apply(cmd)
+
+	if cmd.Commands[0].Writer != color.Output {
+		t.Error("Apply should fall back to color.Output when root Writer is nil")
+	}
+
+	if cmd.Commands[0].ErrWriter != color.Error {
+		t.Error("Apply should fall back to color.Error when root ErrWriter is nil")
+	}
+}
+
+func TestApplyPropagatesDisabledWriter(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommandWith(ccli.WithDisable())
+	cmd.Commands = []*cli.Command{
+		{Name: testSubName},
+	}
+
+	ccli.Apply(cmd)
+
+	if cmd.Commands[0].Writer != os.Stdout {
+		t.Error("Apply should propagate disabled root's os.Stdout to subcommands")
+	}
+
+	if cmd.Commands[0].ErrWriter != os.Stderr {
+		t.Error("Apply should propagate disabled root's os.Stderr to subcommands")
+	}
+}
+
+func TestApplyPreservesExistingWriter(t *testing.T) {
+	t.Parallel()
+
+	var custom bytes.Buffer
+
+	cmd := ccli.NewCommand()
+	cmd.Commands = []*cli.Command{
+		{
+			Name:      testCustom,
+			Writer:    &custom,
+			ErrWriter: &custom,
+		},
+		{
+			Name: "default",
+		},
+	}
+
+	ccli.Apply(cmd)
+
+	if cmd.Commands[0].Writer != &custom {
+		t.Error("Apply should not overwrite existing Writer")
+	}
+
+	if cmd.Commands[0].ErrWriter != &custom {
+		t.Error("Apply should not overwrite existing ErrWriter")
+	}
+
+	if cmd.Commands[1].Writer != color.Output {
+		t.Error("Apply should set Writer on subcommands without one")
 	}
 }
 
@@ -427,7 +588,7 @@ func TestApplyWithOptions(t *testing.T) {
 		Disable: true,
 	})
 	cmd.Commands = []*cli.Command{
-		{Name: "sub"},
+		{Name: testSubName},
 	}
 
 	ccli.ApplyWithOptions(cmd, ccli.Options{
@@ -447,6 +608,14 @@ func TestApplyWithOptions(t *testing.T) {
 	if strings.Contains(tpl, "\033[") {
 		t.Error("disabled template should not contain ANSI escape codes")
 	}
+
+	if cmd.Commands[0].Writer != os.Stdout {
+		t.Error("disabled Apply should propagate os.Stdout to subcommands")
+	}
+
+	if cmd.Commands[0].ErrWriter != os.Stderr {
+		t.Error("disabled Apply should propagate os.Stderr to subcommands")
+	}
 }
 
 func TestApplyWith(t *testing.T) {
@@ -454,7 +623,7 @@ func TestApplyWith(t *testing.T) {
 
 	cmd := ccli.NewCommand()
 	cmd.Commands = []*cli.Command{
-		{Name: "sub"},
+		{Name: testSubName},
 	}
 
 	ccli.ApplyWith(cmd, ccli.WithDisable())
@@ -476,11 +645,11 @@ func TestSubcommandHelpOutputWithApply(t *testing.T) {
 	cmd.Name = testAppName
 	cmd.Commands = []*cli.Command{
 		{
-			Name:  "greet",
-			Usage: "say hello",
+			Name:  testGreetName,
+			Usage: testGreetUsage,
 			Commands: []*cli.Command{
 				{
-					Name:  "world",
+					Name:  testWorldName,
 					Usage: "greet the world",
 				},
 			},
@@ -493,16 +662,92 @@ func TestSubcommandHelpOutputWithApply(t *testing.T) {
 
 	cmd.Writer = &buf
 
-	err := cmd.Run(context.Background(), []string{testAppName, "greet", "world", "--help"})
+	err := cmd.Run(
+		context.Background(),
+		[]string{testAppName, testGreetName, testWorldName, testHelpFlag},
+	)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
 	output := buf.String()
-	for _, expected := range []string{"world", "greet the world", "NAME:", "USAGE:"} {
+	for _, expected := range []string{testWorldName, "greet the world", testNameHeader, "USAGE:"} {
 		if !strings.Contains(output, expected) {
 			t.Errorf("nested subcommand help missing %q, got:\n%s", expected, output)
 		}
+	}
+}
+
+func TestCommandHelpWithSubcommands(t *testing.T) {
+	t.Parallel()
+
+	cmd := ccli.NewCommandWithOptions(noColorOptions())
+	cmd.Name = testAppName
+	cmd.Commands = []*cli.Command{
+		{
+			Name:  testParentName,
+			Usage: "parent command",
+			Commands: []*cli.Command{
+				{
+					Name:  testChildName,
+					Usage: testChildUsage,
+				},
+			},
+		},
+	}
+
+	ccli.ApplyWithOptions(cmd, noColorOptions())
+
+	var buf bytes.Buffer
+
+	cmd.Writer = &buf
+
+	err := cmd.Run(context.Background(), []string{testAppName, testParentName, testHelpFlag})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := buf.String()
+	for _, expected := range []string{"COMMANDS:", testChildName, testChildUsage} {
+		if !strings.Contains(output, expected) {
+			t.Errorf("help output missing %q, got:\n%s", expected, output)
+		}
+	}
+}
+
+func TestCopyrightUsesRedColor(t *testing.T) {
+	t.Parallel()
+
+	red := color.New(color.FgRed)
+	red.EnableColor()
+
+	cmd := ccli.NewCommandWithOptions(ccli.Options{
+		Blue:    ccli.ColorFunc(fmt.Sprint),
+		Cyan:    ccli.ColorFunc(fmt.Sprint),
+		Green:   ccli.ColorFunc(fmt.Sprint),
+		Red:     red.SprintFunc(),
+		Yellow:  ccli.ColorFunc(fmt.Sprint),
+		Disable: false,
+	})
+	cmd.Name = testAppName
+	cmd.Copyright = "2026 Test Corp"
+
+	var buf bytes.Buffer
+
+	cmd.Writer = &buf
+
+	err := cmd.Run(context.Background(), []string{testAppName, testHelpFlag})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := buf.String()
+	if !strings.Contains(output, "2026 Test Corp") {
+		t.Errorf("help output missing copyright text, got:\n%s", output)
+	}
+
+	if !strings.Contains(output, "\033[31m") {
+		t.Errorf("COPYRIGHT header should use red ANSI color, got:\n%s", output)
 	}
 }
 

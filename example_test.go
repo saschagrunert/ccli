@@ -1,6 +1,9 @@
 package ccli_test
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/saschagrunert/ccli/v3"
 	"github.com/urfave/cli/v3"
@@ -66,4 +69,20 @@ func ExampleNewCommandWith_disable() {
 	cmd.Usage = exampleUsage
 
 	// cmd.Run(context.Background(), os.Args)
+}
+
+func ExampleNewCommandWith_run() {
+	cmd := ccli.NewCommandWith(ccli.WithDisable())
+	cmd.Name = "demo"
+	cmd.Action = func(_ context.Context, _ *cli.Command) error {
+		fmt.Println("hello from demo")
+
+		return nil
+	}
+
+	err := cmd.Run(context.Background(), []string{"demo"})
+	if err != nil {
+		return
+	}
+	// Output: hello from demo
 }
