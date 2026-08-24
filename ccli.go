@@ -2,7 +2,9 @@ package ccli
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/fatih/color"
@@ -74,11 +76,31 @@ type Options struct {
 	Disable bool
 }
 
-//nolint:gochecknoglobals // cached defaults to avoid redundant allocations
+//nolint:gochecknoglobals // cached to avoid redundant allocations; color state is fixed after init
 var (
 	cachedDefaults     Options
 	cachedDefaultsOnce sync.Once
+	cachedRootTpl      string
+	cachedCmdTpl       string
+	cachedTplOnce      sync.Once
 )
+
+func buildOptions(opts []Option) Options {
+	options := Options{
+		Blue:    nil,
+		Cyan:    nil,
+		Green:   nil,
+		Red:     nil,
+		Yellow:  nil,
+		Disable: false,
+	}
+
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	return options
+}
 
 func resolveOptions(opts Options) Options {
 	if opts.Disable {
@@ -130,32 +152,37 @@ func defaultOptions() Options {
 	return cachedDefaults
 }
 
+//nolint:gocritic // named returns would conflict with nonamedreturns linter
+func defaultTemplates() (string, string) {
+	cachedTplOnce.Do(func() {
+		opts := defaultOptions()
+		cachedRootTpl = rootCommandHelpTemplate(opts)
+		cachedCmdTpl = commandHelpTemplate(opts)
+	})
+
+	return cachedRootTpl, cachedCmdTpl
+}
+
 // NewCommand creates a new root command with colored help output using
 // default colors. All help templates are set per-command via
 // CustomRootCommandHelpTemplate and CustomHelpTemplate, avoiding
 // global side effects.
 func NewCommand() *cli.Command {
-	return NewCommandWithOptions(defaultOptions())
+	rootTpl, cmdTpl := defaultTemplates()
+
+	return &cli.Command{
+		Writer:                        color.Output,
+		ErrWriter:                     color.Error,
+		CustomRootCommandHelpTemplate: rootTpl,
+		CustomHelpTemplate:            cmdTpl,
+	}
 }
 
 // NewCommandWith creates a new root command with colored help output,
 // configured by functional options. Unset colors fall back to defaults.
 // All help templates are set per-command, avoiding global side effects.
 func NewCommandWith(opts ...Option) *cli.Command {
-	options := Options{
-		Blue:    nil,
-		Cyan:    nil,
-		Green:   nil,
-		Red:     nil,
-		Yellow:  nil,
-		Disable: false,
-	}
-
-	for _, opt := range opts {
-		opt(&options)
-	}
-
-	return NewCommandWithOptions(options)
+	return NewCommandWithOptions(buildOptions(opts))
 }
 
 // NewCommandWithOptions creates a new root command with colored help output
@@ -185,26 +212,25 @@ func NewCommandWithOptions(opts Options) *cli.Command {
 // using default colors. Call this after adding subcommands to ensure they
 // get colored help output.
 func Apply(cmd *cli.Command) {
-	ApplyWithOptions(cmd, defaultOptions())
+	_, cmdTpl := defaultTemplates()
+
+	writer := cmd.Writer
+	if writer == nil {
+		writer = color.Output
+	}
+
+	errWriter := cmd.ErrWriter
+	if errWriter == nil {
+		errWriter = color.Error
+	}
+
+	applyTemplates(cmd.Commands, cmdTpl, writer, errWriter)
 }
 
 // ApplyWith recursively sets colored help templates on all subcommands of cmd
 // using functional options. Call this after adding subcommands.
 func ApplyWith(cmd *cli.Command, opts ...Option) {
-	options := Options{
-		Blue:    nil,
-		Cyan:    nil,
-		Green:   nil,
-		Red:     nil,
-		Yellow:  nil,
-		Disable: false,
-	}
-
-	for _, opt := range opts {
-		opt(&options)
-	}
-
-	ApplyWithOptions(cmd, options)
+	ApplyWithOptions(cmd, buildOptions(opts))
 }
 
 // ApplyWithOptions recursively sets colored help templates on all subcommands
@@ -212,99 +238,123 @@ func ApplyWith(cmd *cli.Command, opts ...Option) {
 func ApplyWithOptions(cmd *cli.Command, opts Options) {
 	opts = resolveOptions(opts)
 	tpl := commandHelpTemplate(opts)
-	applyTemplates(cmd.Commands, tpl)
+
+	var (
+		writer    = color.Output
+		errWriter = color.Error
+	)
+
+	if opts.Disable {
+		writer = os.Stdout
+		errWriter = os.Stderr
+	}
+
+	applyTemplates(cmd.Commands, tpl, writer, errWriter)
 }
 
-func applyTemplates(cmds []*cli.Command, tpl string) {
+func applyTemplates(cmds []*cli.Command, tpl string, writer, errWriter io.Writer) {
 	for _, sub := range cmds {
 		if sub.CustomHelpTemplate == "" {
 			sub.CustomHelpTemplate = tpl
 		}
 
-		applyTemplates(sub.Commands, tpl)
+		if sub.Writer == nil {
+			sub.Writer = writer
+		}
+
+		if sub.ErrWriter == nil {
+			sub.ErrWriter = errWriter
+		}
+
+		applyTemplates(sub.Commands, tpl, writer, errWriter)
 	}
 }
 
 func rootCommandHelpTemplate(opts Options) string {
-	return fmt.Sprintf(
-		`%s
-   {{$v := offset .FullName 6}}%s{{if .Usage}} - {{wrap .Usage $v}}{{end}}
+	var buf strings.Builder
 
-%s
-   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}%s `+
-			`{{if .VisibleFlags}}[global options]{{end}}`+
-			`{{if .VisibleCommands}} [command [command options]]{{end}} `+
-			`{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}`+
-			`{{if .Arguments}}[arguments...]{{end}}{{end}}{{end}}`+
-			`{{if .Version}}{{if not .HideVersion}}
+	buf.WriteString(opts.Yellow("NAME:"))
+	buf.WriteString("\n   {{$v := offset .FullName 6}}")
+	buf.WriteString(opts.Green("{{wrap .FullName 3}}"))
+	buf.WriteString("{{if .Usage}} - {{wrap .Usage $v}}{{end}}\n\n")
 
-%s
-   {{.Version}}{{end}}{{end}}{{if .Description}}
+	buf.WriteString(opts.Yellow("USAGE:"))
+	buf.WriteString("\n   {{if .UsageText}}{{wrap .UsageText 3}}{{else}}")
+	buf.WriteString(opts.Cyan("{{.FullName}}"))
+	buf.WriteString(" {{if .VisibleFlags}}[global options]{{end}}")
+	buf.WriteString("{{if .VisibleCommands}} [command [command options]]{{end}} ")
+	buf.WriteString("{{if .ArgsUsage}}{{.ArgsUsage}}{{else}}")
+	buf.WriteString("{{if .Arguments}}[arguments...]{{end}}{{end}}{{end}}")
 
-%s
-   {{template "descriptionTemplate" .}}{{end}}
-{{- if len .Authors}}
+	buf.WriteString("{{if .Version}}{{if not .HideVersion}}\n\n")
+	buf.WriteString(opts.Yellow("VERSION:"))
+	buf.WriteString("\n   {{.Version}}{{end}}{{end}}")
 
-%s{{with $length := len .Authors}}`+
-			`{{if ne 1 $length}}%s{{end}}{{end}}%s
-   {{range $index, $author := .Authors}}{{if $index}}
-   {{end}}%s{{end}}{{end}}{{if .VisibleCommands}}
+	buf.WriteString("{{if .Description}}\n\n")
+	buf.WriteString(opts.Yellow("DESCRIPTION:"))
+	buf.WriteString("\n   {{template \"descriptionTemplate\" .}}{{end}}")
 
-%s{{template "visibleCommandCategoryTemplate" .}}{{end}}`+
-			`{{if .VisibleFlagCategories}}
+	buf.WriteString("\n{{- if len .Authors}}\n\n")
+	buf.WriteString(opts.Yellow("AUTHOR"))
+	buf.WriteString("{{with $length := len .Authors}}{{if ne 1 $length}}")
+	buf.WriteString(opts.Yellow("S"))
+	buf.WriteString("{{end}}{{end}}")
+	buf.WriteString(opts.Yellow(":"))
+	buf.WriteString("\n   {{range $index, $author := .Authors}}{{if $index}}\n   {{end}}")
+	buf.WriteString(opts.Blue("{{$author}}"))
+	buf.WriteString("{{end}}{{end}}")
 
-%s{{template "visibleFlagCategoryTemplate" .}}`+
-			`{{else if .VisibleFlags}}
+	buf.WriteString("{{if .VisibleCommands}}\n\n")
+	buf.WriteString(opts.Yellow("COMMANDS:"))
+	buf.WriteString("{{template \"visibleCommandCategoryTemplate\" .}}{{end}}")
 
-%s{{template "visibleFlagTemplate" .}}{{end}}{{if .Copyright}}
+	buf.WriteString("{{if .VisibleFlagCategories}}\n\n")
+	buf.WriteString(opts.Yellow("GLOBAL OPTIONS:"))
+	buf.WriteString("{{template \"visibleFlagCategoryTemplate\" .}}")
+	buf.WriteString("{{else if .VisibleFlags}}\n\n")
+	buf.WriteString(opts.Yellow("GLOBAL OPTIONS:"))
+	buf.WriteString("{{template \"visibleFlagTemplate\" .}}{{end}}")
 
-%s
-   {{template "copyrightTemplate" .}}{{end}}
-`, opts.Yellow("NAME:"),
-		opts.Green("{{wrap .FullName 3}}"),
-		opts.Yellow("USAGE:"),
-		opts.Cyan("{{.FullName}}"),
-		opts.Yellow("VERSION:"),
-		opts.Yellow("DESCRIPTION:"),
-		opts.Yellow("AUTHOR"),
-		opts.Yellow("S"),
-		opts.Yellow(":"),
-		opts.Blue("{{$author}}"),
-		opts.Yellow("COMMANDS:"),
-		opts.Yellow("GLOBAL OPTIONS:"),
-		opts.Yellow("GLOBAL OPTIONS:"),
-		opts.Yellow("COPYRIGHT:"),
-	)
+	buf.WriteString("{{if .Copyright}}\n\n")
+	buf.WriteString(opts.Red("COPYRIGHT:"))
+	buf.WriteString("\n   {{template \"copyrightTemplate\" .}}{{end}}\n")
+
+	return buf.String()
 }
 
 func commandHelpTemplate(opts Options) string {
-	return fmt.Sprintf(
-		`%s
-   {{$v := offset .FullName 6}}%s{{if .Usage}} - {{wrap .Usage $v}}{{end}}
+	var buf strings.Builder
 
-%s
-   {{template "usageTemplate" .}}{{if .Category}}
+	buf.WriteString(opts.Yellow("NAME:"))
+	buf.WriteString("\n   {{$v := offset .FullName 6}}")
+	buf.WriteString(opts.Green("{{wrap .FullName 3}}"))
+	buf.WriteString("{{if .Usage}} - {{wrap .Usage $v}}{{end}}\n\n")
 
-%s
-   {{.Category}}{{end}}{{if .Description}}
+	buf.WriteString(opts.Yellow("USAGE:"))
+	buf.WriteString("\n   {{template \"usageTemplate\" .}}")
 
-%s
-   {{template "descriptionTemplate" .}}{{end}}{{if .VisibleFlagCategories}}
+	buf.WriteString("{{if .Category}}\n\n")
+	buf.WriteString(opts.Yellow("CATEGORY:"))
+	buf.WriteString("\n   {{.Category}}{{end}}")
 
-%s{{template "visibleFlagCategoryTemplate" .}}`+
-			`{{else if .VisibleFlags}}
+	buf.WriteString("{{if .Description}}\n\n")
+	buf.WriteString(opts.Yellow("DESCRIPTION:"))
+	buf.WriteString("\n   {{template \"descriptionTemplate\" .}}{{end}}")
 
-%s{{template "visibleFlagTemplate" .}}{{end}}`+
-			`{{if .VisiblePersistentFlags}}
+	buf.WriteString("{{if .VisibleCommands}}\n\n")
+	buf.WriteString(opts.Yellow("COMMANDS:"))
+	buf.WriteString("{{template \"visibleCommandCategoryTemplate\" .}}{{end}}")
 
-%s{{template "visiblePersistentFlagTemplate" .}}{{end}}
-`, opts.Yellow("NAME:"),
-		opts.Green("{{wrap .FullName 3}}"),
-		opts.Yellow("USAGE:"),
-		opts.Yellow("CATEGORY:"),
-		opts.Yellow("DESCRIPTION:"),
-		opts.Yellow("OPTIONS:"),
-		opts.Yellow("OPTIONS:"),
-		opts.Yellow("GLOBAL OPTIONS:"),
-	)
+	buf.WriteString("{{if .VisibleFlagCategories}}\n\n")
+	buf.WriteString(opts.Yellow("OPTIONS:"))
+	buf.WriteString("{{template \"visibleFlagCategoryTemplate\" .}}")
+	buf.WriteString("{{else if .VisibleFlags}}\n\n")
+	buf.WriteString(opts.Yellow("OPTIONS:"))
+	buf.WriteString("{{template \"visibleFlagTemplate\" .}}{{end}}")
+
+	buf.WriteString("{{if .VisiblePersistentFlags}}\n\n")
+	buf.WriteString(opts.Yellow("GLOBAL OPTIONS:"))
+	buf.WriteString("{{template \"visiblePersistentFlagTemplate\" .}}{{end}}\n")
+
+	return buf.String()
 }

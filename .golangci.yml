@@ -11,6 +11,7 @@ linters:
     - bidichk
     - bodyclose
     - canonicalheader
+    - clickhouselint
     - containedctx
     - contextcheck
     - copyloopvar
@@ -28,7 +29,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exhaustruct
+    - exhaustruct_v5
     - exptostd
     - fatcontext
     - forbidigo
@@ -49,7 +50,7 @@ linters:
     - godox
     - goheader
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - gosmopolitan
@@ -116,7 +117,6 @@ linters:
     - wrapcheck
     - wsl_v5
     - zerologlint
-    # - wsl
   settings:
     depguard:
       rules:
@@ -129,9 +129,6 @@ linters:
     errcheck:
       check-type-assertions: true
       check-blank: true
-    exhaustruct:
-      exclude:
-        - github.com/urfave/cli/v3\..*
     gocritic:
       enable-all: true
   exclusions:
@@ -143,9 +140,13 @@ linters:
       - std-error-handling
     rules:
       - linters:
+          - exhaustruct_v5
+        text: '^cli\.\w+ is missing fields'
+      - linters:
           - forbidigo
         path: example/
       - linters:
+          - forbidigo
           - testableexamples
           - gocritic
         path: example_test\.go
@@ -159,6 +160,8 @@ formatters:
     - gofmt
     - gofumpt
     - goimports
+    - golines
+    - swaggo
   exclusions:
     generated: lax
     paths:
